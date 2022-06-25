@@ -3,8 +3,10 @@ import Head from 'next/head'
 
 import WalletConnectProvider from '@walletconnect/web3-provider'
 import Web3Modal from 'web3modal'
-import { providers } from 'ethers'
-import { useCallback, useEffect, useReducer } from 'react'
+import {ethers} from 'ethers'
+import { useCallback, useEffect, useState, useReducer, ChangeEvent } from 'react'
+import { PrivyClient, SiweSession } from '@privy-io/privy-browser'
+import styles from '../styles/Home.module.css'
 
 
 function ellipseAddress(address = '', width = 10): string {
@@ -40,6 +42,8 @@ type StateType = {
   provider?: any
   web3Provider?: any
   address?: string
+  session?: any
+  privyClient?: any
   chainId?: number
 }
 
@@ -49,6 +53,8 @@ type ActionType =
       provider?: StateType['provider']
       web3Provider?: StateType['web3Provider']
       address?: StateType['address']
+      session?: StateType['session']
+      privyClient?: StateType['privyClient']
       chainId?: StateType['chainId']
     }
   | {
@@ -67,6 +73,8 @@ const initialState: StateType = {
   provider: null,
   web3Provider: null,
   address: undefined,
+  session: undefined,
+  privyClient: undefined,
   chainId: undefined,
 }
 
@@ -78,6 +86,8 @@ function reducer(state: StateType, action: ActionType): StateType {
         provider: action.provider,
         web3Provider: action.web3Provider,
         address: action.address,
+        session: action.session,
+        privyClient: action.privyClient,
         chainId: action.chainId,
       }
     case 'SET_ADDRESS':
@@ -101,7 +111,39 @@ function reducer(state: StateType, action: ActionType): StateType {
 const Home: NextPage = () => {
 
   const [state, dispatch] = useReducer(reducer, initialState)
-  const { provider, web3Provider, address } = state
+  const { provider, web3Provider, address, session, privyClient } = state
+  const [stateCalldata, setStateCalldata] = useState("")
+  const [stateTarget, setStateTarget] = useState("")
+  const [stateMultisigAddress, setStateMultisigAddress] = useState("")
+
+  const [localUIMSigAddr, setLocalUIMSigAddr] = useState("")
+  const handleLocalUIMsigAddrChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setLocalUIMSigAddr(event.target.value)
+  }
+  const [localUITarget, setLocalUITarget] = useState("")
+  const handleLocalUITargetChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setLocalUITarget(event.target.value)
+  }
+
+  const [localUICalldata, setLocalUICalldata] = useState("")
+  const handleLocalUICalldataChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setLocalUICalldata(event.target.value)
+  }
+
+  const [stateFriend1Calldata, setStateFriend1Calldata] = useState("")
+  const [stateFriend1Target, setStateFriend1Target] = useState("")
+  const [stateFriend2Calldata, setStateFriend2Calldata] = useState("")
+  const [stateFriend2Target, setStateFriend2Target] = useState("")
+
+  const [localFriend1Addr, setLocalFriend1Addr] = useState("")
+  const handleLocalFriend1AddrChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setLocalFriend1Addr(event.target.value)
+  }
+  const [localFriend2Addr, setLocalFriend2Addr] = useState("")
+  const handleLocalFriend2AddrChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setLocalFriend2Addr(event.target.value)
+  }
+
 
   const connect = useCallback(async function () {
     if (web3Modal === undefined)
@@ -113,21 +155,48 @@ const Home: NextPage = () => {
     // We plug the initial `provider` into ethers.js and get back
     // a Web3Provider. This will add on methods from ethers.js and
     // event listeners such as `.on()` will be different.
-    const web3Provider = new providers.Web3Provider(provider)
+    const web3Provider = new ethers.providers.Web3Provider(provider)
 
     const signer = web3Provider.getSigner()
     const address = await signer.getAddress()
 
     const network = await web3Provider.getNetwork()
 
+    const session = new SiweSession("f0xlZfPKXum67BR2OS-CHMPGT8nwhWEnJJtcBMlTcE0=", window.ethereum)
+    const privyClient = new PrivyClient({session: session})
+
+
     dispatch({
       type: 'SET_WEB3_PROVIDER',
       provider,
       web3Provider,
       address,
+      session,
+      privyClient,
       chainId: network.chainId,
     })
   }, [])
+
+  const fetchDataFromPrivy = async () => {
+    try {
+
+      console.log(`Getting Data for ${localFriend1Addr}`)
+      const [calldata1Friend, target1Friend] = await privyClient.get(localFriend1Addr, ['calldata', 'target']);
+      if (calldata1Friend != undefined)
+        setStateFriend1Calldata(calldata1Friend.text())
+      if (target1Friend != undefined)
+        setStateFriend1Target(target1Friend.text())
+      console.log(`Getting Data for ${localFriend2Addr}`)
+      const [calldata2Friend, target2Friend] = await privyClient.get(localFriend2Addr, ['calldata', 'target']);
+      if (calldata2Friend != undefined)
+        setStateFriend1Calldata(calldata2Friend.text())
+      if (target2Friend != undefined)
+        setStateFriend1Target(target2Friend.text())
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
 
   const disconnect = useCallback(
     async function () {
@@ -143,6 +212,25 @@ const Home: NextPage = () => {
     },
     [provider]
   )
+
+  const handleSaveInfo = async () => {
+    //event.preventDefault();
+    console.log("Saving info");
+    console.log(localUIMSigAddr);
+    console.log(localUITarget);
+    console.log(localUICalldata);
+    const sessionAddress = await session.address();
+    if (!sessionAddress) return
+    const [msig, tgt, cdata] = await privyClient.put(sessionAddress, [
+          {field: 'msigaddr', value: localUIMSigAddr},
+          {field: 'target', value: localUITarget},
+          {field: 'calldata', value: localUICalldata},
+        ]);
+  }
+
+  const submitTransaction = async () => {
+    console.log("TODO")
+  }
 
   // Auto connect to the cached provider
   useEffect(() => {
@@ -220,13 +308,49 @@ const Home: NextPage = () => {
             Welcome to <a href="supersig">SuperSig!</a>
           </h1>
           {web3Provider ? (
-            <button className="button" type="button" onClick={disconnect}>
-              Disconnect
-            </button>
+            <div>
+              <button className={styles.btnb} type="button" onClick={disconnect}>
+                Disconnect
+              </button>
+              <button className={styles.btnb} type='button' onClick={fetchDataFromPrivy}>Get From Privy</button>
+              <div className='grid grid-cols-4 gap-4'>
+                <label>Multisig Address: 
+                  <input className={styles.inpt} type="text" value={localUIMSigAddr} onChange={handleLocalUIMsigAddrChange}></input>
+                </label>
+                <label>End Target: 
+                  <input className={styles.inpt} type="text" value={localUITarget} onChange={handleLocalUITargetChange}></input>
+                </label>
+                <label>Desired Calldata: 
+                  <input className={styles.inpt} type="text" value={localUICalldata} onChange={handleLocalUICalldataChange}></input>
+                </label>
+                <button className={styles.btnb} type="button" onClick={handleSaveInfo}>Save to Privy</button>
+
+                <label>Friend 1 Address:<input className={styles.inpt} value={localFriend1Addr} onChange={handleLocalFriend1AddrChange}></input></label>
+                <label>Friend 1 Target: 
+                  <input className={styles.inpt} type="text" value={stateFriend1Target} readOnly></input>
+                </label>
+                <label>Friend 1 Calldata: 
+                  <input className={styles.inpt} type="text" value={stateFriend1Calldata} readOnly></input>
+                </label>
+                <div></div>
+
+                <label>Friend 2 Address:<input className={styles.inpt} value={localFriend2Addr} onChange={handleLocalFriend2AddrChange}></input></label>
+                <label>Friend 2 Target: 
+                  <input className={styles.inpt} type="text" value={stateFriend2Target} readOnly></input>
+                </label>
+                <label>Friend 2 Calldata: 
+                  <input className={styles.inpt} type="text" value={stateFriend2Calldata} readOnly></input>
+                </label>
+                <div></div>
+              </div>
+              <div>
+                <button className={styles.btnb} type="button" onClick={submitTransaction}>Submit Transaction</button>
+              </div>
+            </div>
           ) : (
-            <button className="button" type="button" onClick={connect}>
-              Connect
-            </button>
+              <button className="button" type="button" onClick={connect}>
+                Connect
+              </button>
           )}
         </div>
       </main>
