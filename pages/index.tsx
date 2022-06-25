@@ -199,7 +199,6 @@ const Home: NextPage = () => {
       <Head>
         <title>Supersig</title>
         <meta name="description" content="SuperSig multisig for Ethereum" />
-        <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <header>
