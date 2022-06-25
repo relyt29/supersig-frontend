@@ -101,7 +101,7 @@ function reducer(state: StateType, action: ActionType): StateType {
 const Home: NextPage = () => {
 
   const [state, dispatch] = useReducer(reducer, initialState)
-  const { provider, web3Provider, address, chainId } = state
+  const { provider, web3Provider, address } = state
 
   const connect = useCallback(async function () {
     if (web3Modal === undefined)
@@ -169,6 +169,7 @@ const Home: NextPage = () => {
 
       // https://docs.ethers.io/v5/concepts/best-practices/#best-practices--network-changes
       const handleChainChanged = (_hexChainId: string) => {
+        console.log(_hexChainId);
         window.location.reload()
       }
 
