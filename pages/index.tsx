@@ -28,6 +28,7 @@ const providerOptions = {
   },
 }
 
+const abiCoder = new ethers.utils.AbiCoder()
 
 let web3Modal: Web3Modal | undefined
 if (typeof window !== 'undefined') {
@@ -47,8 +48,8 @@ type StateType = {
   chainId?: number
 }
 
-const contractABI = [{"name":"Proposed","inputs":[{"name":"proposer","type":"address","indexed":true},{"name":"proposalId","type":"uint256","indexed":true}],"anonymous":false,"type":"event"},{"name":"Executed","inputs":[{"name":"executor","type":"address","indexed":true},{"name":"proposalId","type":"uint256","indexed":true}],"anonymous":false,"type":"event"},{"stateMutability":"payable","type":"constructor","inputs":[{"name":"_owners","type":"address[]"},{"name":"_minimum","type":"uint256"}],"outputs":[]},{"stateMutability":"nonpayable","type":"function","name":"propose","inputs":[{"name":"id","type":"uint256"},{"name":"target","type":"address"},{"name":"calldata_hash","type":"bytes32"},{"name":"_value","type":"uint256"}],"outputs":[]},{"stateMutability":"nonpayable","type":"function","name":"approve","inputs":[{"name":"id","type":"uint256"}],"outputs":[]},{"stateMutability":"nonpayable","type":"function","name":"execute","inputs":[{"name":"id","type":"uint256"},{"name":"calldata","type":"bytes"}],"outputs":[]},{"stateMutability":"nonpayable","type":"function","name":"revoke_approval","inputs":[{"name":"id","type":"uint256"}],"outputs":[]},{"stateMutability":"payable","type":"fallback"},{"stateMutability":"view","type":"function","name":"owners","inputs":[{"name":"arg0","type":"uint256"}],"outputs":[{"name":"","type":"address"}]},{"stateMutability":"view","type":"function","name":"minimum","inputs":[],"outputs":[{"name":"","type":"uint256"}]},{"stateMutability":"view","type":"function","name":"myself","inputs":[],"outputs":[{"name":"","type":"address"}]},{"stateMutability":"view","type":"function","name":"proposals","inputs":[{"name":"arg0","type":"uint256"}],"outputs":[{"name":"","type":"tuple","components":[{"name":"target","type":"address"},{"name":"calldata_hash","type":"bytes32"},{"name":"value","type":"uint256"}]}]},{"stateMutability":"view","type":"function","name":"approvals","inputs":[{"name":"arg0","type":"uint256"}],"outputs":[{"name":"","type":"uint256"}]}]
-const contractBytecode = "60206109f760003960005160456020826109f701600039600051116109f2576020816109f70160003960005180604052600081604581116109f257801561007257905b60206020820260208601016109f7016000396000518060a01c6109f2576020820260600152600101818118610042575b5050505060405180600055602081026000602082601f0104604581116109f25780156100b257905b6020810260600151816001015560010181811861009a575b505050506020610a17600039600051604655306047556109106100e16300000000396109106000016300000000f3600436101561000d57610909565b60003560e01c63125231ae8118610121576024358060a01c61090b576040523461090b5760006048600435602052600052604060002054141561006a5760006048600435602052600052604060002060028101905054141561006d565b60015b156100cf5760176060527f50726f706f73616c20616c7265616479206578697374730000000000000000006080526060506060518060800181600003601f1636823750506308c379a06020526020604052601f19601f6060510116604401603cfd5b6048600435602052600052604060002060405181556044356001820155606435600282015550600435337f047933b4d6d5561046580f25334035991926e1531252edfc5f6faa07bb9de2d260006060a3005b63b759f9548118610372573461090b57600060405260006000546045811161090b57801561017157905b80600101546060523360605118610166576001604052610171565b60010181811861014b575b50506040516101fb5760216060527f4f6e6c79206f776e6572732063616e20617070726f76652070726f706f73616c6080527f730000000000000000000000000000000000000000000000000000000000000060a0526060506060518060800181600003601f1636823750506308c379a06020526020604052601f19601f6060510116604401603cfd5b604a600435602052600052604060002080548060605260018201602082026000602082601f01046045811161090b57801561024957905b808401546020820260800152600101818118610232575b50505050505060006060516045811161090b57801561031057905b602081026080015161092052336109205118610305576027610940527f596f75206861766520616c726561647920617070726f76656420746869732070610960527f726f706f73616c00000000000000000000000000000000000000000000000000610980526109405061094051806109600181600003601f1636823750506308c379a061090052602061092052601f19601f61094051011660440161091cfd5b600101818118610264575b505060496004356020526000526040600020546001818183011061090b57808201905090506049600435602052600052604060002055604a600435602052600052604060002080546044811161090b5760018101825533816001840101555050005b6359efcb158118610688576024356004016107d081351161090b578035806040526020820181816060375050503461090b576048600435602052600052604060002054156103c15760006103da565b6048600435602052600052604060002060028101905054155b15610445576017610840527f50726f706f73616c20646f6573206e6f74206578697374000000000000000000610860526108405061084051806108600181600003601f1636823750506308c379a061080052602061082052601f19601f61084051011660440161081cfd5b604654604960043560205260005260406000205410156104ea57603e610840527f50726f706f73616c20686173206e6f74206265656e20617070726f7665642062610860527f7920746865206d696e696d756d206e756d626572206f66206f776e6572730000610880526108405061084051806108600181600003601f1636823750506308c379a061080052602061082052601f19601f61084051011660440161081cfd5b60405160602060486004356020526000526040600020600181019050541461057257601c610840527f43616c6c64617461206861736820646f6573206e6f74206d6174636800000000610860526108405061084051806108600181600003601f1636823750506308c379a061080052602061082052601f19601f61084051011660440161081cfd5b60486004356020526000526040600020805461084052600181015461086052600281015461088052506048600435602052600052604060002060008155600060018201556000600282015550600060496004356020526000526040600020556001604a6004356020526000526040600020556000604a600435602052600052604060002060018101905055604050614e20615700604051606061088051610840515af1610624573d600060003e3d6000fd5b6156e0614e203d808211610638578161063a565b805b9050905081528051806108a05260208201816108c0838360045afa905090505050600435337f6f6c6d78a4851d4c222c8404fc92372ee84b7b81054305ae8ea3c83c2dabd42e60006156e0a3005b639f5943738118610837573461090b57604a600435602052600052604060002080548060405260018201602082026000602082601f01046045811161090b5780156106e657905b8084015460208202606001526001018181186106cf575b50505050505060006045905b80610900523360206109005160405181101561090b570260600151186107c357600060206109005160405181101561090b57026060015260405180604a600435602052600052604060002055602081026001604a6004356020526000526040600020016000602083601f01046045811161090b57801561078557905b60208102606001518184015560010181811861076e575b50505050506049600435602052600052604060002054600180821061090b578082039050905060496004356020526000526040600020555050610835565b6001018181186106f25750506015610900527f4e6f20617070726f76616c20746f207265766f6b650000000000000000000000610920526109005061090051806109200181600003601f1636823750506308c379a06108c05260206108e052601f19601f6109005101166044016108dcfd5b005b63025e7c278118610861573461090b5760043560005481101561090b576001015460405260206040f35b6352d6804d811861087d573461090b5760465460405260206040f35b63d276fd938118610899573461090b5760475460405260206040f35b63013cf08b81186108d5573461090b57604860043560205260005260406000208054604052600181015460605260028101546080525060606040f35b6363035f6681186108ff573461090b57604960043560205260005260406000205460405260206040f35b5061090956610909565b005b600080fd005b600080fd0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000030000000000000000000000000dedbbdca6ca14cf3c5d5eaa54a00a5097c6d68a00000000000000000000000032a48f9c6f80080622d0214c293be35eb79c3019000000000000000000000000c0d5223ba10d2d9d4970b76e70eba102bbbc68b7"
+const contractABI = [{"name":"Proposed","inputs":[{"name":"proposer","type":"address","indexed":true},{"name":"proposalId","type":"uint256","indexed":true}],"anonymous":false,"type":"event"},{"name":"Executed","inputs":[{"name":"executor","type":"address","indexed":true},{"name":"proposalId","type":"uint256","indexed":true}],"anonymous":false,"type":"event"},{"stateMutability":"payable","type":"constructor","inputs":[{"name":"_owners","type":"address[]"},{"name":"_minimum","type":"uint256"}],"outputs":[]},{"stateMutability":"nonpayable","type":"function","name":"propose","inputs":[{"name":"id","type":"uint256"},{"name":"_hash","type":"bytes32"}],"outputs":[]},{"stateMutability":"nonpayable","type":"function","name":"approve","inputs":[{"name":"id","type":"uint256"}],"outputs":[]},{"stateMutability":"nonpayable","type":"function","name":"execute","inputs":[{"name":"id","type":"uint256"},{"name":"target","type":"address"},{"name":"calldata","type":"bytes"},{"name":"_value","type":"uint256"}],"outputs":[]},{"stateMutability":"nonpayable","type":"function","name":"revoke_approval","inputs":[{"name":"id","type":"uint256"}],"outputs":[]},{"stateMutability":"payable","type":"fallback"},{"stateMutability":"view","type":"function","name":"owners","inputs":[{"name":"arg0","type":"uint256"}],"outputs":[{"name":"","type":"address"}]},{"stateMutability":"view","type":"function","name":"minimum","inputs":[],"outputs":[{"name":"","type":"uint256"}]},{"stateMutability":"view","type":"function","name":"proposals","inputs":[{"name":"arg0","type":"uint256"}],"outputs":[{"name":"","type":"tuple","components":[{"name":"_hash","type":"bytes32"}]}]},{"stateMutability":"view","type":"function","name":"approvals","inputs":[{"name":"arg0","type":"uint256"}],"outputs":[{"name":"","type":"uint256"}]}] 
+const contractBytecode = "60206109ce60003960005160456020826109ce01600039600051116109c9576020816109ce0160003960005180604052600081604581116109c957801561007257905b60206020820260208601016109ce016000396000518060a01c6109c9576020820260600152600101818118610042575b5050505060405180600055602081026000602082601f0104604581116109c95780156100b257905b6020810260600151816001015560010181811861009a575b5050505060206109ee6000396000516046556108eb6100dd6300000015396108eb6000016300000015f3600436101561000d576108e4565b60003560e01c635258352181186100da57346108e65760006047600435602052600052604060002054146100985760176040527f50726f706f73616c20616c7265616479206578697374730000000000000000006060526040506040518060600181600003601f1636823750506308c379a06000526020602052601f19601f6040510116604401601cfd5b60476004356020526000526040600020602435815550600435337f047933b4d6d5561046580f25334035991926e1531252edfc5f6faa07bb9de2d260006040a3005b63b759f954811861032b57346108e65760006040526000600054604581116108e657801561012a57905b8060010154606052336060511861011f57600160405261012a565b600101818118610104575b50506040516101b45760216060527f4f6e6c79206f776e6572732063616e20617070726f76652070726f706f73616c6080527f730000000000000000000000000000000000000000000000000000000000000060a0526060506060518060800181600003601f1636823750506308c379a06020526020604052601f19601f6060510116604401603cfd5b6049600435602052600052604060002080548060605260018201602082026000602082601f0104604581116108e657801561020257905b8084015460208202608001526001018181186101eb575b5050505050506000606051604581116108e65780156102c957905b6020810260800151610920523361092051186102be576027610940527f596f75206861766520616c726561647920617070726f76656420746869732070610960527f726f706f73616c00000000000000000000000000000000000000000000000000610980526109405061094051806109600181600003601f1636823750506308c379a061090052602061092052601f19601f61094051011660440161091cfd5b60010181811861021d575b50506048600435602052600052604060002054600181818301106108e657808201905090506048600435602052600052604060002055604960043560205260005260406000208054604481116108e65760018101825533816001840101555050005b634d20b887811861068f576024358060a01c6108e6576040526044356004016107d08135116108e657803580606052602082018181608037505050346108e65760476004356020526000526040600020546103e6576017610860527f50726f706f73616c20646f6573206e6f74206578697374000000000000000000610880526108605061086051806108800181600003601f1636823750506308c379a061082052602061084052601f19601f61086051011660440161083cfd5b6046546048600435602052600052604060002054101561048b57603e610860527f50726f706f73616c20686173206e6f74206265656e20617070726f7665642062610880527f7920746865206d696e696d756d206e756d626572206f66206f776e65727300006108a0526108605061086051806108800181600003601f1636823750506308c379a061082052602061084052601f19601f61086051011660440161083cfd5b6060604051611120528061114052806111200160605180825260208201818183608060045afa90505050805180602083010181600003601f163682375050601f19601f825160200101169050810190506064356111605261110052611100805160208201209050610860526108605160476004356020526000526040600020541461059b576024610880527f50726f706f73616c206861736820646f6573206e6f742070726f7669646564206108a0527f64617461000000000000000000000000000000000000000000000000000000006108c0526108805061088051806108a00181600003601f1636823750506308c379a061084052602061086052601f19601f61088051011660440161085cfd5b6047600435602052600052604060002080546108805250604760043560205260005260406000206000815550600060486004356020526000526040600020556001604960043560205260005260406000205560006049600435602052600052604060002060018101905055606050614e2061570060605160806064356040515af161062b573d600060003e3d6000fd5b6156e0614e203d80821161063f5781610641565b805b9050905081528051806108a05260208201816108c0838360045afa905090505050600435337f6f6c6d78a4851d4c222c8404fc92372ee84b7b81054305ae8ea3c83c2dabd42e60006156e0a3005b639f594373811861083e57346108e6576049600435602052600052604060002080548060405260018201602082026000602082601f0104604581116108e65780156106ed57905b8084015460208202606001526001018181186106d6575b50505050505060006045905b8061090052336020610900516040518110156108e6570260600151186107ca5760006020610900516040518110156108e657026060015260405180604960043560205260005260406000205560208102600160496004356020526000526040600020016000602083601f0104604581116108e657801561078c57905b602081026060015181840155600101818118610775575b5050505050604860043560205260005260406000205460018082106108e657808203905090506048600435602052600052604060002055505061083c565b6001018181186106f95750506015610900527f4e6f20617070726f76616c20746f207265766f6b650000000000000000000000610920526109005061090051806109200181600003601f1636823750506308c379a06108c05260206108e052601f19601f6109005101166044016108dcfd5b005b63025e7c27811861086857346108e6576004356000548110156108e6576001015460405260206040f35b6352d6804d811861088457346108e65760465460405260206040f35b63013cf08b81186108b057346108e6576047600435602052600052604060002080546040525060206040f35b6363035f6681186108da57346108e657604860043560205260005260406000205460405260206040f35b506108e4566108e4565b005b600080fd005b600080fd0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000030000000000000000000000000dedbbdca6ca14cf3c5d5eaa54a00a5097c6d68a00000000000000000000000032a48f9c6f80080622d0214c293be35eb79c3019000000000000000000000000c0d5223ba10d2d9d4970b76e70eba102bbbc68b7"
 
 type ActionType =
   | {
@@ -116,16 +117,16 @@ const Home: NextPage = () => {
   const [state, dispatch] = useReducer(reducer, initialState)
   const { provider, web3Provider, address, session, privyClient } = state
 
-  const [localUIMSigAddr, setLocalUIMSigAddr] = useState("")
+  const [stateMeMultiSigAddr, setLocalUIMSigAddr] = useState("")
   const handleLocalUIMsigAddrChange = (event: ChangeEvent<HTMLInputElement>) => {
     setLocalUIMSigAddr(event.target.value)
   }
-  const [localUITarget, setLocalUITarget] = useState("")
+  const [stateMeTarget, setLocalUITarget] = useState("")
   const handleLocalUITargetChange = (event: ChangeEvent<HTMLInputElement>) => {
     setLocalUITarget(event.target.value)
   }
 
-  const [localUICalldata, setLocalUICalldata] = useState("")
+  const [stateMeCalldata, setLocalUICalldata] = useState("")
   const handleLocalUICalldataChange = (event: ChangeEvent<HTMLInputElement>) => {
     setLocalUICalldata(event.target.value)
   }
@@ -144,21 +145,6 @@ const Home: NextPage = () => {
     setLocalFriend2Addr(event.target.value)
   }
 
-  const [gnosisMultiSigAddress, setGnosisMultiSigAddress] = useState("")
-  const handleGnosisMultiSigAddressChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setGnosisMultiSigAddress(event.target.value)
-  }
-  const [superSigAddress, setSuperSigAddress] = useState("")
-  const handleSuperSigAddressChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setSuperSigAddress(event.target.value)
-  }
-
-
-  const [hydraSigAddress, setHydraSigAddress] = useState("")
-  const handleHydraSigAddressChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setHydraSigAddress(event.target.value)
-  }
-
   const [deployFriend1Address, setDeployFriend1Address] = useState("")
   const handleDeployFriend1AddressChange = (event: ChangeEvent<HTMLInputElement>) => {
     setDeployFriend1Address(event.target.value)
@@ -168,6 +154,11 @@ const Home: NextPage = () => {
     setDeployFriend2Address(event.target.value)
   }
 
+  const [stateProposalId, setStateProposalId] = useState("")
+  const handleProposalIdChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setStateProposalId(event.target.value)
+  }
+  
 
   const connect = useCallback(async function () {
     if (web3Modal === undefined)
@@ -221,37 +212,15 @@ const Home: NextPage = () => {
     }
   }
 
-const deployHydraSig = async () => {
-    if (gnosisMultiSigAddress != "" && superSigAddress != "") {
-      try {
-        // ***********************************************************************************************!!!!!!
-        // TODO FIX ME 
-        // ***********************************************************************************************!!!!!!
-        const factory = new ethers.ContractFactory(contractABI, contractBytecode, web3Provider.getSigner());
-
-        await factory.deploy([gnosisMultiSigAddress, superSigAddress], 3);
-      } catch (err) {
-        alert(`error deploying HydraSig | one ${gnosisMultiSigAddress} | two ${superSigAddress}`)
-        console.log(err)
-      }
-    } else {
-      alert(`Need to have set Gnosis and Super Sig addresses | one ${gnosisMultiSigAddress} | two ${superSigAddress}`)
-    }
-  }
-
-
-  const runHydraSig = async () => {
-    console.log("TODO")
-  }
-
 
   const deployMultisig = async () => {
     if (deployFriend1Address != "" && deployFriend2Address != "") {
       try {
-        const factory = new ethers.ContractFactory(contractABI, contractBytecode, web3Provider.getSigner());
+        const signer = web3Provider.getSigner();
+        const factory = new ethers.ContractFactory(contractABI, contractBytecode, signer);
 
         //const contract = await factory.deploy([deployFriend1Address, deployFriend2Address], 3);
-        await factory.deploy([deployFriend1Address, deployFriend2Address], 3);
+        await factory.deploy([signer.getAddress(), deployFriend1Address, deployFriend2Address], 3);
       } catch (err) {
         alert(`Need to have set 2 correctly formatted friend addresses | one ${deployFriend1Address} | two ${deployFriend2Address}`)
         console.log(err)
@@ -277,25 +246,44 @@ const deployHydraSig = async () => {
     [provider]
   )
 
-  const handleSaveInfo = async () => {
-    //event.preventDefault();
-    console.log("Saving info");
-    console.log(localUIMSigAddr);
-    console.log(localUITarget);
-    console.log(localUICalldata);
-    const sessionAddress = await session.address();
-    if (!sessionAddress) return
-    //const [msig, tgt, cdata] = await privyClient.put(sessionAddress, [
-    await privyClient.put(sessionAddress, [
-          {field: 'msigaddr', value: localUIMSigAddr},
-          {field: 'target', value: localUITarget},
-          {field: 'calldata', value: localUICalldata},
-        ]);
+  const pushHashToContract = async () => {
+    console.log("Pushing Hash to contract")
+    const encodedData = abiCoder.encode(['address', 'bytes', 'uint256'], [stateMeTarget, ethers.utils.hexlify("0x" + stateMeCalldata), 0])
+    const hashedEncodedData = ethers.utils.keccak256(encodedData);
+    const contract = new ethers.Contract(stateMeMultiSigAddr, contractABI, web3Provider.getSigner());
+    const txhash = await contract.propose(stateProposalId, hashedEncodedData);
+    alert(`Transaction sent: ${txhash}`)
+  }
+
+  const approveProposal = async () => {
+    console.log("Approving proposal")
+    const contract = new ethers.Contract(stateMeMultiSigAddr, contractABI, web3Provider.getSigner());
+    const txhash = await contract.approve(stateProposalId);
+    alert(`Transaction sent: ${txhash}`)
   }
 
   const submitTransaction = async () => {
-    console.log("TODO")
+    console.log("Submitting execution transaction")
+    const contract = new ethers.Contract(stateMeMultiSigAddr, contractABI, web3Provider.getSigner());
+    const txhash = await contract.execute(stateProposalId, stateMeTarget, "0x" + stateMeCalldata, 0);
+    alert(`Transaction sent: ${txhash}`)
   }
+
+  const handleSaveInfo = async () => {
+    //event.preventDefault();
+    console.log("Saving info");
+    console.log(stateMeMultiSigAddr);
+    console.log(stateMeTarget);
+    console.log(stateMeCalldata);
+    const sessionAddress = await session.address();
+    if (!sessionAddress) return
+    const [tgt, cdata] = await privyClient.put(sessionAddress, [
+          {field: 'target', value: stateMeTarget},
+          {field: 'calldata', value: stateMeCalldata},
+        ]);
+    alert(`Saved Target ${tgt.text()} and calldata ${cdata.text()} to privy.`)
+  }
+
 
   // Auto connect to the cached provider
   useEffect(() => {
@@ -350,8 +338,8 @@ const deployHydraSig = async () => {
   return (
     <div>
       <Head>
-        <title>Supersig</title>
-        <meta name="description" content="SuperSig multisig for Ethereum" />
+        <title>Stupidsig</title>
+        <meta name="description" content="StupidSig multisig for Ethereum" />
       </Head>
 
       <header>
@@ -370,25 +358,28 @@ const deployHydraSig = async () => {
       <main>
         <div className='text-center'>
           <h1 className='text-3xl font-bold'>
-            Welcome to <a href="supersig">SuperSig!</a>
+            SuperSig Dashboard!
           </h1>
           {web3Provider ? (
             <div>
-              <button className={styles.btnb} type="button" onClick={disconnect}>
-                Disconnect
-              </button>
-              <button className={styles.btnb} type='button' onClick={fetchDataFromPrivy}>Get From Privy</button>
-              <div className='grid grid-cols-4 gap-4'>
+              <div>
+                <button className={styles.btnb} type="button" onClick={disconnect}>
+                  Disconnect
+                </button>
+              </div>
+              <div>
+                <label>Proposal ID: <input className={styles.inpt} type="number" min="1" value={stateProposalId} onChange={handleProposalIdChange}></input></label>
+              </div>
+              <div className='grid grid-cols-3 gap-4'>
                 <label>Multisig Address: 
-                  <input className={styles.inpt} type="text" value={localUIMSigAddr} onChange={handleLocalUIMsigAddrChange}></input>
+                  <input className={styles.inpt} type="text" value={stateMeMultiSigAddr} onChange={handleLocalUIMsigAddrChange}></input>
                 </label>
-                <label>End Target: 
-                  <input className={styles.inpt} type="text" value={localUITarget} onChange={handleLocalUITargetChange}></input>
+                <label>Target Address: 
+                  <input className={styles.inpt} type="text" value={stateMeTarget} onChange={handleLocalUITargetChange}></input>
                 </label>
                 <label>Desired Calldata: 
-                  <input className={styles.inpt} type="text" value={localUICalldata} onChange={handleLocalUICalldataChange}></input>
+                  <input className={styles.inpt} type="text" value={stateMeCalldata} onChange={handleLocalUICalldataChange}></input>
                 </label>
-                <button className={styles.btnb} type="button" onClick={handleSaveInfo}>Save to Privy</button>
 
                 <label>Friend 1 Address:<input className={styles.inpt} value={localFriend1Addr} onChange={handleLocalFriend1AddrChange}></input></label>
                 <label>Friend 1 Target: 
@@ -397,7 +388,6 @@ const deployHydraSig = async () => {
                 <label>Friend 1 Calldata: 
                   <input className={styles.inpt} type="text" value={stateFriend1Calldata} readOnly></input>
                 </label>
-                <div></div>
 
                 <label>Friend 2 Address:<input className={styles.inpt} value={localFriend2Addr} onChange={handleLocalFriend2AddrChange}></input></label>
                 <label>Friend 2 Target: 
@@ -406,17 +396,19 @@ const deployHydraSig = async () => {
                 <label>Friend 2 Calldata: 
                   <input className={styles.inpt} type="text" value={stateFriend2Calldata} readOnly></input>
                 </label>
-                <div>
-                </div>
 
               </div>
-              <div>
+              <div className='mt-4 mb-4'>
+                <button className={styles.btnb} type='button' onClick={fetchDataFromPrivy}>Get From Privy</button>
+                <button className={styles.btnb} type="button" onClick={handleSaveInfo}>Save to Privy</button>
+                <button className={styles.btnb} type="button" onClick={pushHashToContract}>Push Hash to Contract</button>
+                <button className={styles.btnb} type="button" onClick={approveProposal}>Approve Proposal</button>
                 <button className={styles.btnb} type="button" onClick={submitTransaction}>Submit Transaction</button>
               </div>
               <hr className='mt-8 mb-3'/>
               <div>
                 <h1 className='text-3xl font-bold'>
-                  Deploy new Multisig
+                  Deploy new Supersig 
                 </h1>
               </div>
               <div>
@@ -430,39 +422,6 @@ const deployHydraSig = async () => {
               <div>
                 <button className={styles.btnb} type="button" onClick={deployMultisig}>Deploy New Multisig</button>
               </div>
-              <hr className='mt-8 mb-3'/>
-              <div>
-                <h1 className='text-3xl font-bold'>
-                  Deploy new HydraSig
-                </h1>
-              </div>
-              <div>
-                <label>Gnosis Multisig Address:
-                  <input className={styles.inpt} value={gnosisMultiSigAddress} onChange={handleGnosisMultiSigAddressChange}></input>
-                </label>
-                <label>Supersig Address:
-                  <input className={styles.inpt} value={superSigAddress} onChange={handleSuperSigAddressChange}></input>
-                </label>
-              </div>
-              <div>
-                <button className={styles.btnb} type="button" onClick={deployHydraSig}>Deploy New HydraSig</button>
-              </div>
-
-              <hr className='mt-8 mb-3'/>
-              <div>
-                <h1 className='text-3xl font-bold'>
-                  Execute Hydrasig
-                </h1>
-              </div>
-              <div>
-                <label>Hydrasig Address
-                  <input className={styles.inpt} value={hydraSigAddress} onChange={handleHydraSigAddressChange}></input>
-                </label>
-              </div>
-              <div>
-                <button className={styles.btnb} type="button" onClick={runHydraSig}>Execute HydraSig</button>
-              </div>
-
 
 
             </div>
