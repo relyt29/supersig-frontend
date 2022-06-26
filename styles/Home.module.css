@@ -6,3 +6,12 @@
 .inpt {
     @apply m-2 bg-gray-400
 }
+
+.inptwrong {
+    @apply m-2  bg-rose-500
+}
+
+
+.inptright {
+    @apply m-2 bg-lime-500
+}
