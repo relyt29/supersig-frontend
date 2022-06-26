@@ -144,6 +144,20 @@ const Home: NextPage = () => {
     setLocalFriend2Addr(event.target.value)
   }
 
+  const [gnosisMultiSigAddress, setGnosisMultiSigAddress] = useState("")
+  const handleGnosisMultiSigAddressChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setGnosisMultiSigAddress(event.target.value)
+  }
+  const [superSigAddress, setSuperSigAddress] = useState("")
+  const handleSuperSigAddressChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setSuperSigAddress(event.target.value)
+  }
+
+
+  const [hydraSigAddress, setHydraSigAddress] = useState("")
+  const handleHydraSigAddressChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setHydraSigAddress(event.target.value)
+  }
 
   const [deployFriend1Address, setDeployFriend1Address] = useState("")
   const handleDeployFriend1AddressChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -206,6 +220,30 @@ const Home: NextPage = () => {
       console.error(error);
     }
   }
+
+const deployHydraSig = async () => {
+    if (gnosisMultiSigAddress != "" && superSigAddress != "") {
+      try {
+        // ***********************************************************************************************!!!!!!
+        // TODO FIX ME 
+        // ***********************************************************************************************!!!!!!
+        const factory = new ethers.ContractFactory(contractABI, contractBytecode, web3Provider.getSigner());
+
+        await factory.deploy([gnosisMultiSigAddress, superSigAddress], 3);
+      } catch (err) {
+        alert(`error deploying HydraSig | one ${gnosisMultiSigAddress} | two ${superSigAddress}`)
+        console.log(err)
+      }
+    } else {
+      alert(`Need to have set Gnosis and Super Sig addresses | one ${gnosisMultiSigAddress} | two ${superSigAddress}`)
+    }
+  }
+
+
+  const runHydraSig = async () => {
+    console.log("TODO")
+  }
+
 
   const deployMultisig = async () => {
     if (deployFriend1Address != "" && deployFriend2Address != "") {
@@ -392,6 +430,41 @@ const Home: NextPage = () => {
               <div>
                 <button className={styles.btnb} type="button" onClick={deployMultisig}>Deploy New Multisig</button>
               </div>
+              <hr className='mt-8 mb-3'/>
+              <div>
+                <h1 className='text-3xl font-bold'>
+                  Deploy new HydraSig
+                </h1>
+              </div>
+              <div>
+                <label>Gnosis Multisig Address:
+                  <input className={styles.inpt} value={gnosisMultiSigAddress} onChange={handleGnosisMultiSigAddressChange}></input>
+                </label>
+                <label>Supersig Address:
+                  <input className={styles.inpt} value={superSigAddress} onChange={handleSuperSigAddressChange}></input>
+                </label>
+              </div>
+              <div>
+                <button className={styles.btnb} type="button" onClick={deployHydraSig}>Deploy New HydraSig</button>
+              </div>
+
+              <hr className='mt-8 mb-3'/>
+              <div>
+                <h1 className='text-3xl font-bold'>
+                  Execute Hydrasig
+                </h1>
+              </div>
+              <div>
+                <label>Hydrasig Address
+                  <input className={styles.inpt} value={hydraSigAddress} onChange={handleHydraSigAddressChange}></input>
+                </label>
+              </div>
+              <div>
+                <button className={styles.btnb} type="button" onClick={runHydraSig}>Execute HydraSig</button>
+              </div>
+
+
+
             </div>
           ) : (
               <button className="button" type="button" onClick={connect}>
